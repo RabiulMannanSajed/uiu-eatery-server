@@ -27,6 +27,9 @@ async function run() {
     // here we making database collection
     const menuCollection = client.db("uiuEateryDb").collection("menu");
     const foodItemCollection = client.db("uiuEateryDb").collection("fooditem");
+    const foodCartsCollection = client
+      .db("uiuEateryDb")
+      .collection("foodCarts");
     const webReviewCollection = client
       .db("uiuEateryDb")
       .collection("webReviews");
@@ -36,6 +39,7 @@ async function run() {
       const result = await menuCollection.find().toArray();
       res.send(result); // use to send respons to client site
     });
+
     // this is  for foodItem
     app.get("/fooditem", async (req, res) => {
       const result = await foodItemCollection.find().toArray();
@@ -45,6 +49,13 @@ async function run() {
     // this is for all web site review
     app.get("/webReviews", async (req, res) => {
       const result = await webReviewCollection.find().toArray();
+      res.send(result);
+    });
+
+    //  Food cart collection data come form client site
+    app.post("/foodCart", async (req, res) => {
+      const item = req.body;
+      const result = await foodCartsCollection.insertOne(item);
       res.send(result);
     });
 
