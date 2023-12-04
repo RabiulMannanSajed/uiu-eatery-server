@@ -7,7 +7,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z68se.mongodb.net/?retryWrites=true&w=majority`; // ` this is use to daynamic somthig `
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -37,7 +37,7 @@ async function run() {
     // this is for restaurant info
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
-      res.send(result); // use to send respons to client site
+      res.send(result); // use to send response to client site
     });
 
     // this is  for foodItem
@@ -52,10 +52,31 @@ async function run() {
       res.send(result);
     });
 
-    //  Food cart collection data come form client site
-    app.post("/foodCart", async (req, res) => {
+    //  to show that in client site  2nd
+    app.get("/foodCarts", async (req, res) => {
+      const email = req?.query?.email;
+      console.log("email", email);
+      if (!email) {
+        res.send([]);
+      }
+
+      // this what
+      const query = { email: email };
+      const result = await foodCartsCollection.find(query).toArray();
+      res.send(result);
+    });
+    // this is for data take from client site 1st
+    app.post("/foodCarts", async (req, res) => {
       const item = req.body;
       const result = await foodCartsCollection.insertOne(item);
+      res.send(result);
+    });
+
+    // delete item form  database 3rd also done
+    app.delete("/foodCarts/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await foodCartsCollection.deleteOne(query);
       res.send(result);
     });
 
