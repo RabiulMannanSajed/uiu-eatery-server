@@ -1,6 +1,8 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+//json Web token
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
@@ -25,6 +27,7 @@ async function run() {
     await client.connect();
 
     // here we making database collection
+    const usersCollection = client.db("uiuEateryDb").collection("users");
     const menuCollection = client.db("uiuEateryDb").collection("menu");
     const foodItemCollection = client.db("uiuEateryDb").collection("fooditem");
     const foodCartsCollection = client
@@ -34,6 +37,52 @@ async function run() {
       .db("uiuEateryDb")
       .collection("webReviews");
 
+    //jwt token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "48h",
+      });
+      res.send({ token });
+    });
+
+    //  user related apis
+
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    // test making admin
+    app.patch("/users/admin/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          role: "admin",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // test adding rest name
+
+    app.patch("/users/restaurantName/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          restaurantName: "khan's Kitchen",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
     // this is for restaurant info
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
