@@ -9,7 +9,29 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// this is checking the token
+const verifyJwt = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "Unauthorized access" });
+  }
+  // [barer token]
+  const token = authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+    if (err) {
+      return res
+        .status(401)
+        .send({ error: true, message: "Unauthorized access" });
+    }
+    req.decode = decode;
+    next();
+  });
+};
+
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { send } = require("vite");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z68se.mongodb.net/?retryWrites=true&w=majority`; // ` this is use to daynamic somthig `
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -37,7 +59,7 @@ async function run() {
       .db("uiuEateryDb")
       .collection("webReviews");
 
-    //jwt token
+    //jwt token cause form client
     app.post("/jwt", (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
@@ -57,7 +79,16 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
-    // test making admin
+    // this is checking an user is admin or not
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
+    //  making admin
     app.patch("/users/admin/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -73,11 +104,25 @@ async function run() {
     // test adding rest name
 
     app.patch("/users/restaurantName/:id", async (req, res) => {
+      // here use param cause id taken ^ form param
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
           restaurantName: "khan's Kitchen",
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    // user Payment
+    app.patch("/users/payment/:id", async (req, res) => {
+      // here use param cause id taken ^ form param
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          payment: 0,
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
@@ -103,6 +148,7 @@ async function run() {
 
     //  to show that in client site  2nd
     app.get("/foodCarts", async (req, res) => {
+      // here use query cause email taken from body
       const email = req?.query?.email;
       console.log("email", email);
       if (!email) {
