@@ -79,6 +79,7 @@ async function run() {
       const result = await usersCollection.insertOne(user);
       res.send(result);
     });
+
     // this is checking an user is admin or not
     app.get("/users/admin/:email", async (req, res) => {
       const email = req.params.email;
@@ -107,9 +108,10 @@ async function run() {
       // here use param cause id taken ^ form param
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
+      const { restaurantName } = req.body;
       const updateDoc = {
         $set: {
-          restaurantName: "khan's Kitchen",
+          restaurantName: restaurantName,
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
@@ -128,10 +130,69 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    // this is for restaurant info
+    //  delete user
+    app.delete("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    }); // this is for restaurant info
     app.get("/menu", async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result); // use to send response to client site
+    });
+    // take data for client site
+    app.post("/menu", async (req, res) => {
+      const item = req.body;
+      const result = await menuCollection.insertOne(item);
+      res.send(result);
+    });
+    //TODO:  this is for menu approve
+    // app.patch("/menu/approve/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: new ObjectId(id) };
+    //   const updateDoc = {
+    //     $set: {
+    //       approve: "approve",
+    //     },
+    //   };
+    //   const result = await menuCollection.updateOne(filter, updateDoc);
+    //   res.send(result);
+    // });
+    // //  TODO : this is for menu reject
+    // app.patch("/menu/reject/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: new ObjectId(id) };
+    //   const updateDoc = {
+    //     $set: {
+    //       approve: "reject",
+    //     },
+    //   };
+    //   const result = await menuCollection.updateOne(filter.updateDoc);
+    //   res.send(result);
+    // });
+
+    app.patch("/menu/approve/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          approve: "approve",
+        },
+      };
+      const result = await menuCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.patch("/menu/reject/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          hire: "reject",
+        },
+      };
+      const result = await menuCollection.updateOne(filter, updateDoc);
+      res.send(result);
     });
 
     // this is  for foodItem
@@ -145,21 +206,20 @@ async function run() {
       const result = await webReviewCollection.find().toArray();
       res.send(result);
     });
-
-    //  to show that in client site  2nd
     app.get("/foodCarts", async (req, res) => {
-      // here use query cause email taken from body
-      const email = req?.query?.email;
-      console.log("email", email);
-      if (!email) {
-        res.send([]);
-      }
-
-      // this what
-      const query = { email: email };
-      const result = await foodCartsCollection.find(query).toArray();
+      const result = await foodCartsCollection.find().toArray();
       res.send(result);
     });
+    // this to add the data payment done
+    app.delete("/foodCarts/paymentDone", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+
+      const result = await foodCartsCollection.deleteMany(query);
+      res.send(result);
+    });
+
+    // });
     // this is for data take from client site 1st
     app.post("/foodCarts", async (req, res) => {
       const item = req.body;
