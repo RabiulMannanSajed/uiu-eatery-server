@@ -102,8 +102,6 @@ async function run() {
       res.send(result);
     });
 
-    // test adding rest name
-
     app.patch("/users/restaurantName/:id", async (req, res) => {
       // here use param cause id taken ^ form param
       const id = req.params.id;
