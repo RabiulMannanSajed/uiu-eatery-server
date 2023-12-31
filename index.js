@@ -186,7 +186,7 @@ async function run() {
       const filter = { _id: new ObjectId(id) };
       const updateDoc = {
         $set: {
-          hire: "reject",
+          approve: "reject",
         },
       };
       const result = await menuCollection.updateOne(filter, updateDoc);
@@ -198,7 +198,20 @@ async function run() {
       const result = await foodItemCollection.find().toArray();
       res.send(result);
     });
-
+    // take the info of item from client
+    app.post("/fooditem", async (req, res) => {
+      const item = req.body;
+      const result = await foodItemCollection.insertOne(item);
+      res.send(result);
+    });
+    // delete an item from  data base base on rest admin
+    // TODO : can't delete the item for here giving error find and make right
+    app.delete("/fooditem/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await foodItemCollection.deleteOne(filter);
+      res.send(result);
+    });
     // this is for all web site review
     app.get("/webReviews", async (req, res) => {
       const result = await webReviewCollection.find().toArray();
@@ -217,7 +230,6 @@ async function run() {
       res.send(result);
     });
 
-    // });
     // this is for data take from client site 1st
     app.post("/foodCarts", async (req, res) => {
       const item = req.body;
